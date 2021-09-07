@@ -17,16 +17,23 @@ import { ConfigValidationSchema } from './config.schema';
       inject: [ConfigService],
       useFactory: async (
         configService: ConfigService,
-      ): Promise<TypeOrmModuleOptions> => ({
-        autoLoadEntities: true,
-        synchronize: true,
-        type: 'postgres',
-        host: configService.get<string>('DB_HOST'),
-        password: configService.get<string>('DB_PASSWORD'),
-        port: configService.get<number>('DB_PORT'),
-        username: configService.get<string>('DB_USERNAME'),
-        database: configService.get<string>('DB_DATABASE'),
-      }),
+      ): Promise<TypeOrmModuleOptions> => {
+        const isProduction = configService.get<string>('DB_HOST') === 'prod';
+        return {
+          ssl: isProduction,
+          extra: {
+            ssl: isProduction ? { rejectUnauthorized: false } : null,
+          },
+          autoLoadEntities: true,
+          synchronize: true,
+          type: 'postgres',
+          host: configService.get<string>('DB_HOST'),
+          password: configService.get<string>('DB_PASSWORD'),
+          port: configService.get<number>('DB_PORT'),
+          username: configService.get<string>('DB_USERNAME'),
+          database: configService.get<string>('DB_DATABASE'),
+        };
+      },
     }),
     AuthModule,
   ],
